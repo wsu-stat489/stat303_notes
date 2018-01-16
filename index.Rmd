@@ -1,0 +1,16 @@
+---
+title: "STAT 303 R Notes"
+author: 
+date: 
+output: html_document
+---
+
+* [Introduction to R](./IntroToR.html)
+* [Arules in R](./arules_R.html)
+* [Simulating the Notebook Context](./simulating_notebook_context.html)
+* [Other Probability Rules](./other_probability_rules.html)
+* [Simulating the Mean](./expected_value_simulation.html)
+* [Simulating the Variance](./variance_simulations.html)
+* [Simulating the Binomial Distribution](./simulating_the_binomial_distribution.html)
+
+

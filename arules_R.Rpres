@@ -1,0 +1,371 @@
+arules_R
+========================================================
+author: Todd Iverson
+date: 11/21/2017
+autosize: true
+
+
+
+Recall - Association Rules
+========================================================
+
+* Example: $\{butter\} \rightarrow \{whole.milk\}$
+  * $Support(\textrm{butter and milk}) = \frac{\textrm{Num butter and milk}}{\textrm{Num Total}}$
+  * $Support(\textrm{butter}) = \frac{\textrm{Num butter}}{\textrm{Nu
+  m Total}}$
+  * $Confidence= \frac{Support(\textrm{butter and milk})}{Support(\textrm{butter})}$
+  * $Confidence= \frac{Confidence}{Support(\textrm{butter})}$
+  
+Exercise - Compute the confidence and lift (small example)
+========================================================
+
+![](./small_example.png)
+
+Arules with R (The long way)
+========================================================
+
+* Use `dyplr` to 
+  * mutate to compute logical values
+  * summarize to compute counts and percents
+  
+  
+Read the data set
+========================================================
+
+```{r}
+groceries <- read.csv("Groceries.csv",
+                      header = TRUE,
+                      sep=",")
+head(groceries[, 1:6])
+```
+
+Set Up
+========================================================
+
+```{r}
+library(dplyr)
+butter_milk <- groceries %>%
+                select("butter", "whole.milk")
+head(butter_milk)
+N <- nrow(groceries)
+N
+```
+
+Compute the Total for Butter
+========================================================
+
+```{r}
+total_butter <- butter_milk %>%
+  filter(butter == 1) %>%
+  summarize(total_butter = sum(butter))
+total_butter
+support_butter = total_butter/N
+support_butter
+```
+
+Compute the Proportion for Butter
+========================================================
+
+```{r}
+support_butter <- butter_milk %>%
+  filter(butter == 1) %>%
+  summarize(support_butter = sum(butter)/N)
+support_butter
+```
+
+Exercise - Compute the Support of whole.milk
+========================================================
+
+* Verify that the Whole Milk column is `whole.milk`
+* Compute the support
+
+
+Solution
+========================================================
+
+```{r}
+support_milk <- 
+  butter_milk %>%
+  mutate(bought_milk = whole.milk == 1) %>%
+  summarize(total_milk = sum(bought_milk)/N)
+support_milk
+```
+
+Support for Butter and Milk
+========================================================
+
+```{r}
+support_butter_milk <- 
+  butter_milk %>%
+  mutate(bought_butter_and_milk = (butter == 1 & whole.milk == 1)) %>%
+  summarize(total_butter = sum(bought_butter_and_milk)/N)
+support_butter_milk
+```
+
+Confidence and Lift
+========================================================
+
+```{r}
+conf_butter_milk <- support_butter_milk/support_butter
+conf_butter_milk
+lift_butter_milk <- conf_butter_milk/support_milk
+lift_butter_milk
+```
+
+All at once
+========================================================
+
+```{r}
+groceries %>%
+  mutate(bought_milk = whole.milk == 1,
+          bought_butter = butter == 1,
+          bought_butter_milk = (butter == 1 & whole.milk == 1)) %>%
+          summarize(support_milk = sum(bought_milk)/N,
+                    support_butter = sum(bought_butter)/N,
+                    support_butter_milk = sum(bought_butter_milk)/N) %>%
+          mutate(confidence = support_butter_milk/support_butter) %>%
+          mutate(lift = confidence/support_milk)
+
+```
+
+Notes
+========================================================
+
+* Must compute values before you use them
+  * Compute supports before confidence
+  * Compute confidence before lift
+
+Exercise
+========================================================
+
+* Compute the confidence and lift for the following rules
+  * $\{Cereal\} \rightarrow \{Whole Milk\}$
+  * $\{Liquor\} \rightarrow \{Whole Milk\}$
+* Try doing this with one `mutate`
+* Interpret the values of the lift for each.
+
+
+Example Data Frame
+========================================================
+
+```{r}
+df <- data.frame("a" = c(1,2),
+                 "b" = c(3,4),
+                 "c" = c(5,6),
+                 "d" = c(7,8))
+df
+```
+
+
+
+Stacking Columns with gather
+========================================================
+
+```{r}
+library(tidyr)
+stacked <- df %>%
+  gather(key = "Label",
+         value = "Value",
+         a, b, c)
+stacked
+```
+
+Stacking All-But-One Column with gather
+========================================================
+
+```{r}
+library(tidyr)
+stacked <- df %>%
+  gather(key = "Label",
+         value = "Value",
+         -d)
+stacked
+```
+
+
+Group and Aggregate with group_by
+========================================================
+```{r}
+stacked %>%
+  group_by(Label) %>%
+  summarize(mean = mean(Value))
+```
+
+Group and Aggregate with group_by
+========================================================
+```{r}
+stacked
+```
+***
+```{r}
+stacked %>%
+  group_by(Label) %>%
+  summarize(mean = mean(Value))
+```
+
+Computing Many Rules At Once
+========================================================
+
+* Stack the LHS into one column
+* Group by LHS
+* Compute values
+  * Support
+  * Confidence
+  * Lift
+  
+Step 0 - Read the data and load libraries
+========================================================
+
+```{r}
+# Be sure to change the working directory
+library(tidyr)
+library(dplyr)
+
+groceries <- read.csv("Groceries.csv",
+                      header = TRUE,
+                      sep=",")
+N <- nrow(groceries)
+```
+
+Step 1 - Stack all of the other products
+========================================================
+
+```{r}
+groceries_stacked <-
+  groceries %>%
+  gather(key = "Other",
+         value = "Purch",
+         -whole.milk)
+head(groceries_stacked)
+```
+
+
+
+ 
+Step 2 - Make the logical columns
+========================================================
+
+```{r}
+stacked_with_logical <-
+  groceries_stacked %>%
+  mutate(pur_milk = whole.milk == 1,
+         pur_lhs = Purch == 1,
+         pur_both = (Purch == 1 & whole.milk == 1)) 
+head(stacked_with_logical)
+```
+
+
+
+Step 3 - Compute the support, confidence, and lift for each
+========================================================
+
+```{r}
+# Note that we group_by the products to keep them separate.
+many_rules <-
+stacked_with_logical %>%
+  group_by(Other) %>%
+  summarize(sup_milk = sum(pur_milk)/N,
+            sup_lhs = sum(pur_lhs)/N,
+            sup_both = sum(pur_both)/N) %>%
+  mutate(conf = sup_both/sup_lhs) %>%
+  mutate(lift = conf/sup_milk) %>%
+  select(Other, conf, lift)
+```
+
+View the results
+========================================================
+
+```{r, eval=FALSE}
+View(many_rules)
+```
+
+
+Automate the process with the arules library
+========================================================
+
+```{r eval=FALSE}
+install.packages("arules")
+library(arules)
+```
+
+
+Columns must be factors
+========================================================
+
+```{r}
+groc_factors <-
+  groceries %>%
+  mutate_if(is.integer, as.factor)
+```
+
+
+  
+Make a transaction object
+========================================================
+
+```{r}
+groc_trans <-
+  as(groc_factors, "transactions")
+```
+
+
+  
+Compute the rules
+========================================================
+
+```{r}
+groc_rules <- apriori(groc_trans, 
+                      parameter = list(supp = 0.0,
+                                       conf = 0.0,
+                                       maxlen = 2))
+groc_rules
+```
+
+
+                                    
+Pull out the rules with whole.milk
+========================================================
+
+```{r}
+rules_with_milk <- 
+  subset(groc_rules, 
+         subset = rhs %in% "whole.milk=1")
+inspect(sort(rules_with_milk, by = "lift")[1:10])
+```
+
+Limiting the number of rules
+========================================================
+
+```{r}
+groc_rules <- apriori(groc_trans, 
+                      parameter = list(supp = 0.75,
+                                       conf = 0.70,
+                                       maxlen = 2))
+groc_rules
+```
+
+Visualizing the Rules with arulesViz
+========================================================
+
+```{r eval = FALSE}
+install.packages("arulesViz")
+```
+
+Making the Visualization
+========================================================
+
+```{r}
+outcomes<-head(sort(groc_rules,by="lift"),20)
+
+library(arulesViz)
+plot(outcomes, method="grouped")
+```
+
+
+
+
+
+
+
+
+

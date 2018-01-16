@@ -1,0 +1,14 @@
+---
+title: "STAT 303 R Notes"
+author: 
+date: 
+output: html_document
+---
+
+* [Simulating the Notebook Context](./simulating_notebook_context.html)
+<<<<<<< HEAD
+=======
+* [Other Probability Rules](./other_probability_rules.html)
+>>>>>>> gh-pages
+
+

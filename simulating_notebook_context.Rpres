@@ -1,0 +1,270 @@
+Simulating the Notebook Context
+========================================================
+author: Todd Iverson
+date: 
+autosize: true
+
+The Notebook Context
+========================================================
+![notebook context](notebook_context.png)
+***
+- Useful way to imagine an experiment
+- Each row represents 1 trial
+- First column is an outcome
+- Subsequent columns are TRUE/FALSE questions
+
+Two types of experiments
+========================================================
+
+- Most experiments can be thoughts of as sampling problems
+- There are two types of sampling
+  - with replacement
+  - without replacement 
+- Types of experiments
+  - **simple experiments** have sample size 1
+  - **compound experiments** have sample size $n > 1$
+
+Example: Coin Tosses
+========================================================
+![coin urns](coin_sampling.png)
+***
+- Flipping a fair coin
+- Sample from a container with `"H"` and `"T"`
+- Questions
+  - with or without replacement?
+  - How would you simulate a coin that comes up heads 60% of the time?
+
+
+Today's Goals
+========================================================
+
+- Simulate simple and compound events with `sample`
+- Mimic the notebook context with a data frame
+- Understand the *shape* of simulation code for
+  - simple experiments
+  - compound experiments
+
+Using `sample` for simple experiments
+========================================================
+
+```{r}
+# Make the "container" (char vector)
+sides = c("H", "T")
+```
+```{r}
+# Use sample to simulate the experiment
+sample(sides, 1, replace = TRUE)
+sample(sides, 1, replace = TRUE)
+```
+
+Using `sample` for compound experiments
+========================================================
+
+```{r}
+# Use sample to simulate the experiment
+sample(sides, 3, replace = TRUE)
+sample(sides, 3, replace = TRUE)
+```
+
+Use `replicate` to repeat the experiment
+========================================================
+
+- `replicate` repeats an expression $n$ times
+- Syntax: `replicate(n, expr)`
+- Useful for simulations
+  - Make a function for 1 trials
+  - Use replicate + function call for many trials
+  
+Replicate in action
+========================================================
+
+```{r}
+trials <- replicate(7, sample(sides, 3, replace = TRUE))
+trials
+```
+
+Transpose with `t` to make the data tall
+========================================================
+
+- `t` is transpose
+- switches rows and columns
+
+```{r}
+t(trials)
+```
+
+Package the outcomes in a data frame
+========================================================
+
+```{r}
+library(dplyr)
+notebook <- trials %>% 
+              t() %>% 
+              as.data.frame() %>% 
+              setNames(c("R1", 
+                         "R2", 
+                         "R3"))
+notebook
+```
+
+Using `mutate` to asks questions about the trials
+========================================================
+- **Question 1:** Was the first roll a head?
+
+```{r}
+library(dplyr)
+notebook <- notebook %>% 
+              mutate(first_head = (R1 == "H"))
+notebook
+```
+
+Using `mutate` to asks questions about the trials
+========================================================
+- **Question 2:** Was there at least one head in the last two rolls
+- **Note:** The symbol `|` and `&` are *or* and *and*, respectively
+
+```{r}
+library(dplyr)
+notebook <- notebook %>% 
+  mutate(at_least_one_head = (R2 == "H") | (R3 == "H"))
+notebook
+```
+
+Separate (Imperative) Code
+========================================================
+```{r}
+library(dplyr)
+trials <- replicate(7, sample(sides, 3, replace = TRUE))
+notebook <- trials %>% 
+              t() %>% 
+              as.data.frame() %>% 
+              setNames(c("R1", "R2", "R3"))
+notebook <- notebook %>% 
+  mutate(at_least_one_head = (R2 == "H") | (R3 == "H"))
+```
+
+Noticing the pipe pattern
+========================================================
+
+![](./compose_imperative.png)
+
+- The **imperative pipe pattern**: Anytime one pipe starts with the output of the last.
+- We can *compose* the imperative pipe pattern into one pipe
+
+Package the whole process in a pipe
+========================================================
+
+```{r}
+notebook <- 
+  replicate(100, sample(sides, 3, replace = TRUE)) %>%
+  t() %>%
+  as.data.frame() %>%
+  setNames(c("R1", "R2", "R3")) %>%
+  mutate(first_head = (R1 == "H")) %>%
+  mutate(at_least_one_head = (R2 == "H") | (R3 == "H"))
+notebook
+```
+
+The mean of a logical vector is the number of TRUE entries
+========================================================
+
+- recall that `TRUE` and `FALSE` promotes to 0 and 1
+
+```{r}
+mean(c(TRUE, FALSE, TRUE, TRUE))
+```
+
+Estimate the probability with `summarize` and `mean`
+========================================================
+
+```{r}
+notebook %>%
+  summarize("P(first is head)" = mean(first_head), 
+            "P(at least one head)" = mean(at_least_one_head))
+```
+
+Exercises
+========================================================
+  
+1. Create a data frame for the experiment "Roll 2 fair 6-sided dice"
+  1. Sample from what container?
+2. Create logical columns for each of the following
+  1. The first roll is larger than 4
+  2. The sum is larger than 7
+3. Estimate the probability of each of the events given above
+
+Simulating a simple experiment with built-in functions
+========================================================
+
+- R can simulate many distributions
+  - `rnorm(N, mu, sigma)` for normal data,
+  - `rbinom(N, n, p)` for binomial data, etc.
+- There give one outcome in a vector
+  - Simple experiment
+  
+These functions return vectors
+========================================================
+
+```{r}
+trials <- rnorm(5, 2, 3)
+trials
+is.vector(trials)
+```
+
+Vectors don't need the transpose
+========================================================
+
+```{r}
+notebook <-
+  rnorm(5, 2, 3) %>%
+  # t() %>% # Skip the transpose
+  as.data.frame %>%
+  setNames(c("X"))
+notebook
+```
+
+Experiments using R "r" functions
+========================================================
+
+```{r}
+notebook <-
+  rnorm(100, 2, 3) %>%
+  as.data.frame() %>%
+  setNames(c("X"))
+```
+
+- pass directly into `as.data.frame`
+- skip `t()`
+
+Simple using replicate and sample
+========================================================
+
+```{r}
+space <- c(1,2,3,4)
+notebook <-
+  replicate(100, 
+            sample(1, 
+                   space, 
+                   replace = TRUE)) %>%
+  as.data.frame()
+```
+- `sample` with $n = 1$
+- pass directly into `as.data.frame`
+- skip `t()`
+
+Compound experiments using `replicate` and `sample`
+========================================================
+
+```{r}
+space <- c(1,2,3,4)
+notebook <-
+  replicate(100, 
+            sample(2, 
+                   space, 
+                   replace = TRUE)) %>%
+  t() %>%
+  as.data.frame()
+```
+- `sample` with $n > 1$
+- `replicate` $\rightarrow$ `t()` $\rightarrow$ `as.data.frame`
+
