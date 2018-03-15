@@ -39,12 +39,12 @@ head(df)
 
 ```
   Draw_1 Draw_2 Draw_3
-1      B      R      R
+1      B      B      B
 2      R      B      R
-3      R      B      B
-4      B      B      R
-5      B      B      R
-6      B      B      B
+3      B      B      R
+4      R      R      B
+5      B      R      R
+6      B      R      B
 ```
 
 Compute the Random Variable
@@ -61,12 +61,12 @@ head(df)
 
 ```
   Draw_1 Draw_2 Draw_3 num_red
-1      B      R      R       2
+1      B      B      B       0
 2      R      B      R       2
-3      R      B      B       1
-4      B      B      R       1
-5      B      B      R       1
-6      B      B      B       0
+3      B      B      R       1
+4      R      R      B       2
+5      B      R      R       2
+6      B      R      B       1
 ```
 
 Compute the Variance - Brute Force
@@ -80,7 +80,7 @@ df %>%
 
 ```
   var_brute
-1   0.55668
+1 0.5573493
 ```
 
 Compute the Variance - Definition
@@ -94,7 +94,7 @@ df %>%
 
 ```
     var_def
-1 0.5566744
+1 0.5573437
 ```
 
 Compute the Variance - Short Cut
@@ -108,5 +108,5 @@ df %>%
 
 ```
     var_def
-1 0.5566744
+1 0.5573437
 ```

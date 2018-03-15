@@ -10,6 +10,10 @@ Why use R?
 - Save and rerun code
 - Lots of stats/data science packages
 - Great graphics
+
+Why use R?
+========================================================
+
 - Built for data
 - free, open source, cross-platform
 - Large community
@@ -22,13 +26,19 @@ Market-share
 Why RStudio?
 ========================================================
 
-- Adds *quality of life* improvements
-  - Code completion
-  - Variable explorer
-  - Keyboard shortcuts
-- Adds more advanced file-types
-  - Rmarkdown
-  - Rpresentation
+Adds *quality of life* improvements
+
+- Code completion
+- Variable explorer
+- Keyboard shortcuts
+  
+Why RStudio?
+========================================================
+
+Adds more advanced file-types
+
+- Rmarkdown
+- Rpresentation
   
 More about RStudio
 ========================================================
@@ -47,13 +57,11 @@ Getting Help
 
 ```r
 ?barplot
-args(lm)
+args(round)
 ```
 
 ```
-function (formula, data, subset, weights, na.action, method = "qr", 
-    model = TRUE, x = FALSE, y = FALSE, qr = TRUE, singular.ok = TRUE, 
-    contrasts = NULL, offset, ...) 
+function (x, digits = 0) 
 NULL
 ```
 
@@ -229,14 +237,34 @@ round(digits = 2, x = 3.14159)
 Vectors
 ========================================================
 
-- Used to store an ordered sequence
-- 6 basic types
-  - character
-  - numeric
-  - logical
-  - integer
-  - complex
-  - raw
+Used to store an ordered sequence
+  
+
+```r
+c(1,2,3,4)
+```
+
+```
+[1] 1 2 3 4
+```
+  
+Vectors
+========================================================
+
+6 basic types
+
+- character
+- numeric
+- logical
+  
+Vectors
+========================================================
+
+6 basic types
+
+- integer
+- complex
+- raw
   
 Vector Examples
 ========================================================
@@ -293,8 +321,8 @@ Adding to a Vector with `c`
 
 
 ```r
-weight_g <- c(weight_g, 90) # add to the end of the vector
-weight_g <- c(30, weight_g) # add to the beginning of the vector
+weight_g <- c(weight_g, 90) # add to end 
+weight_g <- c(30, weight_g) # add to beginning 
 weight_g
 ```
 
@@ -496,6 +524,20 @@ c("mouse", "rat", "dog", "cat")[c(FALSE, TRUE, TRUE, TRUE)]
 [1] "rat" "dog" "cat"
 ```
 
+Challenge - Be your own interpreter
+========================================================
+
+Write down the expressions you would evaluate.
+
+
+```r
+weight_g[weight_g >= 30 & weight_g == 21]
+```
+
+```
+numeric(0)
+```
+
 Challenge (optional)
 ========================================================
 
@@ -513,7 +555,7 @@ Can you figure out why `"four" > "five"` returns TRUE?
 Missing Values
 ========================================================
 
-- Real data as missing values
+- Real data has missing values
 - R is designed for real data
 - `NA` is a missing value
 
@@ -568,31 +610,42 @@ heights[!is.na(heights)]
 Removing `NA`s
 ========================================================
 
-```
-## Returns the object with incomplete cases removed. The returned object is atomic.
+Use `na.omit` to remove all `NA`s
+
+
+```r
 na.omit(heights)
+```
 
-## Extract those elements which are complete cases.
-heights[complete.cases(heights)]
-
+```
+[1] 2 4 4 6
+attr(,"na.action")
+[1] 4
+attr(,"class")
+[1] "omit"
 ```
 
 Reading files
 ========================================================
 
+Picking the file manually with `file.choose`
+
 
 ```r
-# Navigate to the file
 surveys <- read.csv( file.choose() )
 ```
 
+Reading files
+========================================================
+
+Using a path (in a string).
+
+
 ```r
-# Using a path
 surveys <- read.csv('data/portal_data_joined.csv', # The path
                     header=TRUE, # This file has a header
                     sep=",") # How data is separated
 ```
-
 Viewing a data frame
 ========================================================
 
