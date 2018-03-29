@@ -1,0 +1,738 @@
+<style>
+.reveal h1, .reveal h2, .reveal h3 {
+  word-wrap: normal;
+  -moz-hyphens: none;
+}
+.small-code pre code {
+  font-size: 1em;
+}
+.midcenter {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}
+.footer {
+    color: black; background: #E8E8E8;
+    position: fixed; top: 90%;
+    text-align:center; width:100%;
+}
+.pinky .reveal .state-background {
+  background: #FF69B4;
+} 
+.pinky .reveal h1,
+.pinky .reveal h2,
+.pinky .reveal p {
+  color: black;
+}
+
+</style>
+Introduction to dplyr
+========================================================
+author: 
+date: 
+autosize: true
+
+Review - Reading files
+========================================================
+
+Picking the file manually with `file.choose`
+
+```{r eval=FALSE}
+surveys <- read.csv( file.choose() )
+```
+
+Review - Reading files
+========================================================
+
+Using a path (in a string).
+
+```{r}
+surveys <- 
+  read.csv('portal_data_joined.csv')
+```
+
+What is `dpylr` and `tidyverse`?
+========================================================
+
+- Package for managing and manipulating data
+- Consists of
+  - `dpylr`
+    - filter
+    - make new columns
+    - aggregate
+  - `tildr`
+    - Fix data and apply golden rule
+  - `ggplot`
+    - Nice graphics
+    
+    
+Installing `tidyverse`
+========================================================
+
+```{r eval=FALSE}
+# Only need to do this once
+# Time consuming!
+install.packages("tidyverse")
+```
+
+Loading a Library
+========================================================
+
+```{r}
+# This loads all of the dpylr functions
+library("dplyr")
+```
+
+Selecting columns with `select`
+========================================================
+
+```{r}
+# Syntax: select(df, col1, col2, ...)
+new_df <- select(surveys, plot_id, species_id, weight)
+
+# Good habit: Always inspect the result with head
+head(new_df)
+```
+
+Selecting rows with `filter`
+========================================================
+
+```{r}
+new_df2 <- filter(surveys, year == 1995)
+head(new_df2)
+# Why are there columns not select (last slide) still here?
+```
+
+Making a new column with `mutate`
+========================================================
+
+```{r}
+new_df <- select(surveys, plot_id, species_id, weight, year)
+new_df2 <- filter(new_df, year == 1995)
+new_df3 <- mutate(new_df2, weight_kg = weight / 1000)
+head(new_df3)
+```
+
+Fundamental `dyplr`/functional principles
+========================================================
+
+- data frame in, data frame out
+- returns a **new** data frame
+  - no mutation
+
+Imperative pattern - Save, save, save
+========================================================
+
+![](./imperative_pattern.png)
+- **Problem 1:** Lots of temporary variables
+- **Problem 2:** Messy and lots of *overhead*
+  - All the extra *stuff* clouds the meaning/intent of the code
+
+Poor solution - Rewrite to the same data frame
+========================================================
+
+```{r eval=FALSE}
+# What is wrong with this approach?
+surveys <- select(surveys, plot_id, species_id, weight, year)
+surveys <- filter(surveys, year == 1995)
+surveys <- mutate(surveys, weight_kg = weight / 1000)
+head(surveys)
+```
+
+Use a pipe for cleaner code
+========================================================
+
+```{r}
+surveys  %>% 
+  select(         plot_id, species_id, weight, year) %>%
+  filter(         year == 1995) %>%
+  mutate(         weight_kg = weight / 1000) %>%
+  head(           )
+```
+
+Pipe pushes the data frame through the first position
+========================================================
+
+![](./pipe1.png)
+
+Imagine an invisible data frame in the first spot
+========================================================
+
+```{r}
+surveys  %>% 
+  select(#surveys,      
+                      plot_id, species_id, weight, year) %>%
+  filter(#df_sel,
+                      year == 1995) %>%
+  mutate(#df_sel_filt,     
+                      weight_kg = weight / 1000) %>%
+  head(#df_sel_filt_mutate        
+       )
+```
+
+Important Point - Each data frame is NEW
+========================================================
+
+![](./pipe2.png)
+
+
+Imagine the missing data frame ... but don't write it!
+========================================================
+
+```{r}
+surveys  %>% 
+  select(plot_id, species_id, weight, year) %>%
+  filter(year == 1995) %>%
+  mutate(weight_kg = weight / 1000) %>%
+  head()
+```
+
+Saving the result of a piped operation
+========================================================
+
+```{r}
+surveys_small <- surveys %>%
+  filter(weight < 5) %>%
+  select(species_id, sex, weight)
+
+head(surveys_small)
+```
+
+Challenge
+========================================================
+
+Create a new data frame from the surveys data that meets the following criteria: 
+
+- contains only the **`species_id`** column and 
+- a new column called  **`hindfoot_half`** 
+  - values that are half the **`hindfoot_length`** values. 
+- **`hindfoot_half`** column has 
+  - no `NA`s and 
+  - all values are less than 30.
+
+Hint: think about how the commands should be ordered to produce this data frame!
+
+Review - piping
+========================================================
+
+* Push output to next function
+* First position
+
+***
+
+```{r}
+library(dplyr)
+pi %>%
+  round(2) %>%
+  as.character
+```
+
+The advantages of piping
+========================================================
+
+* reads left-to-right
+* reads top-to-bottom
+* Focus on verbs
+* Removes pointless nouns
+
+***
+
+```{r}
+pi %>%
+  round(2) %>%
+  as.character
+```
+
+Convert - Imperative
+========================================================
+
+```{r}
+x <- pi
+r_x <- 
+  round(x, 2)
+c_x <- 
+  as.character(r_x)
+```
+
+***
+
+```{r}
+pi %>%
+  round(2) %>%
+  as.character
+```
+
+
+Convert - Functions
+========================================================
+
+```{r}
+as.character(
+  round(
+    pi, 2))
+```
+
+***
+
+```{r}
+pi %>%
+  round(2) %>%
+  as.character
+```
+
+Challenge - Convert to imperative
+========================================================
+
+```{r}
+surveys %>%
+  filter(weight < 5) %>%
+  select(species_id, sex, weight)
+```
+
+Challenge - Convert to functional
+========================================================
+
+```{r}
+surveys %>%
+  filter(weight < 5) %>%
+  select(species_id, sex, weight)
+```
+
+Types of programming errors
+========================================================
+
+* Name errors
+* Syntax errors
+* Semantic errors (hardest/worst)
+
+Name Errors - Using the wrong name
+========================================================
+
+```{r, eval = FALSE}
+# Find the name errors
+sales %>%
+  select(salesperson, sedan)
+```
+
+Syntax errors - Incorrect syntax
+========================================================
+
+```{r, eval = FALSE}
+# Find the syntax errors
+sales %>%
+  group_by(Salesperson) %>%
+  mutate(avg_sedan = mean(Sedan),
+         avg_SUV = mean(SUV)
+         avg_truck = mean(Truck)
+```
+
+Semantic Errors - Correct code, wrong meaning
+========================================================
+
+```{r, eval = FALSE}
+# Find the semantic errors
+sales %>%
+  group_by(Salesperson) %>%
+  mutate(avg_sedan = median(Truck))
+```
+
+Comparing JMP to dlpyr
+========================================================
+
+JMP
+
+* Visual
+* Point-and-click
+* No name or syntax errors
+  * Still have semantic errors
+  
+***
+
+dplyr
+
+* automated
+* reproducible
+* easy to make changes
+
+Translating dplyr to JMP
+========================================================
+
+* Same actions, different syntax
+* Use what you already know
+  * Figure out process in JMP
+  * Translate to `dplyr`
+
+
+Simple Aggregations
+========================================================
+
+```{r}
+surveys %>%
+  summarise(
+    avg_wgt = mean(weight, 
+                   na.rm = TRUE))
+```
+
+Simple Aggregations
+========================================================
+
+![](./img/simple_aggregation_0.png)
+
+Simple Aggregations
+========================================================
+
+![](./img/simple_aggregation_1.png)
+
+Simple Aggregations
+========================================================
+
+![](./img/simple_aggregation_2.png)
+
+Group and Aggregate
+========================================================
+
+```{r}
+grp_agg <- 
+  surveys %>%
+  group_by(taxa) %>%
+  summarise(
+    avg = mean(weight, 
+               na.rm = TRUE))
+```
+
+Group and Aggregate
+========================================================
+
+```{r}
+grp_agg 
+```
+
+Group and Aggregate
+========================================================
+
+![](./img/group_and_aggregate_0.png)
+
+Group and Aggregate
+========================================================
+
+![](./img/group_and_aggregate_1.png)
+
+Group and Aggregate
+========================================================
+
+![](./img/group_and_aggregate_2.png)
+
+Removing NAs
+========================================================
+
+```{r}
+grp_agg <- 
+  surveys %>%
+  filter(!is.na(weight)) %>%
+  group_by(taxa) %>%
+  summarise(
+    avg = mean(weight))
+```
+
+Group and Aggregate
+========================================================
+
+```{r}
+grp_agg 
+```
+
+
+Multiple Group Variables
+========================================================
+
+```{r}
+grp_agg_2 <- 
+  surveys %>%
+  group_by(taxa, sex) %>%
+  summarise(
+    cnt = n())
+```
+
+Group and Aggregate
+========================================================
+
+```{r}
+grp_agg_2 
+```
+
+Challenge - What is a tibble?
+========================================================
+
+```{r, eval=FALSE}
+# Explore the output
+surveys %>%
+  group_by(taxa)
+```
+
+A familiar example - auto sales
+========================================================
+
+```{r}
+sales <-
+  read.csv("auto_sales.csv")
+```
+
+A familiar example - auto sales
+========================================================
+
+```{r}
+sales 
+```
+
+Stacking and Unstacking Columns
+========================================================
+
+* `library(tidyr)`
+* Stack $\rightarrow$ `gather`
+* Unstack $\rightarrow$ `spread` 
+
+Review - Numeric column transformation
+========================================================
+
+```{r}
+sales %>%
+  mutate(car_sales = Compact + Sedan)
+```
+
+Translating JMP to dplyr - Numeric transformations
+========================================================
+
+![](./img/numeric_transform_0.png)
+
+Translating JMP to dplyr - Numeric transformations
+========================================================
+
+![](./img/numeric_transform_1.png)
+
+
+Translating JMP to dplyr - Numeric transformations
+========================================================
+
+![](./img/numeric_transform_2.png)
+
+Translating JMP to dplyr - Column select
+========================================================
+
+```{r}
+sales %>%
+  select(Salesperson,
+         Compact,
+         Sedan)
+```
+
+Translating JMP to dplyr - Column select
+========================================================
+
+![](./img/select_0.png)
+
+Translating JMP to dplyr - Column select
+========================================================
+
+![](./img/select_1.png)
+
+Translating JMP to dplyr - Column select
+========================================================
+
+![](./img/select_2.png)
+
+
+
+Stacking Columns with gather
+========================================================
+
+Arguments are:
+
+1. label column name 
+2. data column name
+3. then a list of columns to stack
+
+Example - Stacking auto sales
+========================================================
+
+```{r}
+library(tidyr)
+stacked_sales <-
+  sales %>%
+  gather("auto_type",
+         "num_sales", 
+         Compact, 
+         Sedan,
+         SUV, 
+         Truck)
+```
+
+Example - Stacking auto sales
+========================================================
+
+```{r}
+head(stacked_sales)
+```
+  
+Translating gather
+========================================================
+
+![](./img/translate_gather_0.png)
+
+Translating gather
+========================================================
+
+![](./img/translate_gather_1.png)
+
+Translating gather
+========================================================
+
+![](./img/translate_gather_2.png)
+
+Translating gather
+========================================================
+
+![](./img/translate_gather_3.png)
+
+Using -Salesperson trick
+========================================================
+
+```{r}
+library(tidyr)
+stacked_sales <-
+  sales %>%
+  gather("auto_type",
+         "num_sales", 
+         -Salesperson) #Everything but
+```
+
+Example - Stacking auto sales
+========================================================
+
+```{r}
+head(stacked_sales)
+```
+
+Translating JMP to dplyr - Row filter
+========================================================
+
+```{r}
+stacked_sales %>%
+  filter(num_sales > 20)
+```
+
+Translating JMP to dplyr - Row filter
+========================================================
+
+![](./img/filter_0.png)
+
+Translating JMP to dplyr - Row filter
+========================================================
+
+![](./img/filter_1.png)
+
+Translating JMP to dplyr - Row filter
+========================================================
+
+![](./img/filter_2.png)
+
+Character transformations with recode
+========================================================
+
+```{r}
+stacked_sales <-
+  stacked_sales %>%
+  mutate(car_type = 
+           recode(auto_type, 
+                  Compact = "Car",
+                  Sedan = "Car",
+                  SUV = "Utility",
+                  Truck = "Utility"))
+```
+
+Translating JMP to dplyr - Character transformation
+========================================================
+
+![](./img/character_transform_0.png)
+
+Translating JMP to dplyr - Character transformation
+========================================================
+
+![](./img/character_transform_1.png)
+
+Translating JMP to dplyr - Character transformation
+========================================================
+
+![](./img/character_transform_2.png)
+
+Translating JMP to dplyr - Character transformation
+========================================================
+
+![](./img/character_transform_3.png)
+
+Translating JMP to dplyr - Character transformation
+========================================================
+
+![](./img/character_transform_4.png)
+
+Example - Grouping and aggregate the sales by car_type
+========================================================
+
+```{r}
+car_sales <- 
+  stacked_sales %>%
+  group_by(Salesperson, car_type) %>%
+  summarise(car_sales = sum(num_sales)) %>%
+  as.data.frame
+```
+
+Example - Grouping and aggregate the sales by car_type
+========================================================
+
+```{r}
+car_sales
+```
+
+Unstacking columns with spread
+========================================================
+
+Arguments are:
+
+1. Column to split on
+2. Column to split
+
+Example - Unstacking car sales
+========================================================
+
+```{r}
+car_sales_unstacked <-
+  car_sales %>%
+  spread(car_type, car_sales) %>%
+  as.data.frame
+```
+
+Example - Unstacking car sales
+========================================================
+
+```{r}
+car_sales_unstacked
+```
+
+Translating JMP to dplyr - Unstacking
+========================================================
+
+![](./img/unstack_0.png)
+
+Translating JMP to dplyr - Unstacking
+========================================================
+
+![](./img/unstack_1.png)
+
+Translating JMP to dplyr - Unstacking
+========================================================
+
+![](./img/unstack_2.png)
+
+Translating JMP to dplyr - Unstacking
+========================================================
+
+![](./img/unstack_3.png)

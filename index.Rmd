@@ -6,6 +6,7 @@ output: html_document
 ---
 
 * [Introduction to R](./IntroToR.html)
+* [Introduction to dplyr](./Intro_to_dplyr.html)
 * [Arules in R](./arules_R.html)
 * [Simulating the Notebook Context](./simulating_notebook_context.html)
 * [Other Probability Rules](./other_probability_rules.html)
